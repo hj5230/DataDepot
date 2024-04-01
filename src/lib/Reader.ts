@@ -1,6 +1,6 @@
 import * as path from "path";
 import * as fs from "fs";
-import * as zlib from "zlib";
+import * as zstd from "zstd.ts";
 
 abstract class Reader {
   abstract read(): Record<string, unknown>;
@@ -16,25 +16,25 @@ export class ChunkReader extends Reader {
     this.depotName = depotName;
   }
 
-  private getChunkName(index: number): string {
+  private getChunkName = (index: number): string => {
     return path.join(
       this.basePath,
       `${this.depotName}-${index}.bdc`
     );
-  }
+  };
 
-  read(): Record<string, unknown> {
+  read = (): Record<string, unknown> => {
     const chunks = [];
     let i = 0;
     while (fs.existsSync(this.getChunkName(i))) {
       const chunk = fs.readFileSync(this.getChunkName(i));
-      chunks.push(zlib.gunzipSync(chunk));
+      chunks.push(zstd.decompressSync({ input: chunk }));
       i++;
     }
     const stringData =
       Buffer.concat(chunks).toString("utf-8");
     return JSON.parse(stringData);
-  }
+  };
 }
 
 type BufferEncoding =

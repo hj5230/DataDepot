@@ -1,10 +1,14 @@
 import * as fs from "fs";
 import * as path from "path";
-import * as zlib from "zlib";
+import * as zstd from "zstd.ts";
 
 import * as Errors from "./Errors";
 
-class Writer {
+abstract class Writer {
+  abstract write(data: string): void;
+}
+
+export class ChunkWriter extends Writer {
   private basePath: string;
   private depotName: string;
   private maxChunkSize: number | null = null;
@@ -19,6 +23,7 @@ class Writer {
       maxChunkCount?: number;
     }
   ) {
+    super();
     if (!params) {
       this.basePath = basePath;
       this.depotName = Date.now().toString();
@@ -36,17 +41,17 @@ class Writer {
     this.maxChunkCount = params.maxChunkCount || null;
   }
 
-  private getChunkName(index: number): string {
+  private getChunkName = (index: number): string => {
     return path.join(
       this.basePath,
       `${this.depotName}-${index}.bdc`
     );
-  }
+  };
 
-  write(data: string): void {
+  write = (data: string): void => {
     const buffer = Buffer.from(data, "utf-8");
-    const gzipped = zlib.gzipSync(buffer);
-    this.totalSize = gzipped.length;
+    const compressed = zstd.compressSync({ input: buffer });
+    this.totalSize = compressed.length;
     if (this.maxChunkSize !== null) {
       const chunkCount = Math.ceil(
         this.totalSize / this.maxChunkSize
@@ -57,7 +62,7 @@ class Writer {
           start + this.maxChunkSize,
           this.totalSize
         );
-        const chunk = gzipped.subarray(start, end);
+        const chunk = compressed.subarray(start, end);
         fs.writeFileSync(this.getChunkName(i), chunk);
       }
     } else if (this.maxChunkCount !== null) {
@@ -70,13 +75,11 @@ class Writer {
           start + chunkSize,
           this.totalSize
         );
-        const chunk = gzipped.subarray(start, end);
+        const chunk = compressed.subarray(start, end);
         fs.writeFileSync(this.getChunkName(i), chunk);
       }
     } else {
-      fs.writeFileSync(this.getChunkName(0), gzipped);
+      fs.writeFileSync(this.getChunkName(0), compressed);
     }
-  }
+  };
 }
-
-export default Writer;
