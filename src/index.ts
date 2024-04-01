@@ -1,49 +1,91 @@
+import * as Errors from "./lib/Errors";
 import Depot from "./lib/Depot";
-import { ChunkWriter } from "./lib/Writer";
-import { ChunkReader } from "./lib/Reader";
+import {
+  ChunkReader,
+  JsonReader,
+  ObjectReader,
+} from "./lib/Reader";
+import { ChunkWriter, JsonWriter } from "./lib/Writer";
 
-import { example } from "./assets/example";
+export class DataDepot {
+  private constructor() {
+    throw new Errors.InstantiateStaticClassError(
+      "DataDepot"
+    );
+  }
 
-const depot = new Depot();
-// const writer = new Writer("./temp", { maxChunkSize: 1000 });
-// const writer = new Writer("./temp", { maxChunkCount: 3 });
-const writer = new ChunkWriter("./temp", {
-  depotName: "lababa",
-});
-depot.setItem("user", {
-  name: "shangqi",
-  surname: "zhao",
-  age: 22,
-  bio: "A programmer, and always a learner",
-});
-depot.setItem("example", example);
-const str = depot.serialize();
-writer.write(str);
+  public static load = <T>(
+    depot: Depot<T>,
+    basePath: string,
+    chunkName: string,
+    key?: string
+  ): void => {
+    depot.load(
+      new ChunkReader<T>(basePath, chunkName).read(key)
+    );
+  };
 
-const reader = new ChunkReader("./temp", "lababa");
-depot.load(reader.read());
-console.log(depot.getItem("user"));
-console.log(depot.getItem("example"));
+  public static loadFromJson = <T>(
+    depot: Depot<T>,
+    filePath: string,
+    encoding?: BufferEncoding
+  ): void => {
+    depot.load(
+      new JsonReader<T>(filePath, encoding).read()
+    );
+  };
 
-// class User {
-//   private username: string;
-//   private data: Record<string, unknown>;
+  public static loadFromObject = <T>(
+    depot: Depot<T>,
+    object: object
+  ) => {
+    depot.load(new ObjectReader<T>(object).read());
+  };
 
-//   constructor(
-//     username: string,
-//     data: Record<string, unknown>
-//   ) {
-//     this.username = username;
-//     this.data = data;
-//   }
-// }
+  public static insertAnObject = <T>(
+    depot: Depot<T>,
+    key: string,
+    object: object
+  ) => {
+    depot.setItem(
+      key,
+      new ObjectReader<T>(object).read() as unknown as T
+    );
+  };
 
-// const user = new User("bruh", {
-//   age: 17,
-//   gender: "M",
-// });
-// console.log(typeof user, user); // object User {...}
+  public static write = <T>(
+    depot: Depot<T>,
+    basePath: string,
+    option?: {
+      chunkName?: string;
+      key?: string;
+      maxChunkSize?: number;
+      maxChunkCount?: number;
+    }
+  ): void => {
+    const serialized =
+      option?.key !== undefined
+        ? depot.serialize(option.key)
+        : depot.serialize();
+    if (option) {
+      const { chunkName, maxChunkSize, maxChunkCount } =
+        option;
+      new ChunkWriter(basePath, {
+        chunkName,
+        maxChunkSize,
+        maxChunkCount,
+      }).write(serialized);
+    } else {
+      new ChunkWriter(basePath).write(serialized);
+    }
+  };
 
-// const strUsr = JSON.stringify(user); // string
-// console.log(strUsr);
-// console.log(typeof JSON.parse(strUsr)); // object (Record)
+  public static writeToJson = <T>(
+    depot: Depot<T>,
+    fileName: string
+  ): void => {
+    new JsonWriter(fileName).write(depot.serialize());
+  };
+}
+
+export * from "./lib/Depot";
