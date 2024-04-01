@@ -1,0 +1,12 @@
+node_modules/
+src/
+test/
+tsconfig.json
+yarn.lock
+nodemon.json
+.git/
+.vscode
+.eslintrc.cjs
+.gitignore
+.prettierrc
+*.tgz
