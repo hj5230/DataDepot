@@ -5,50 +5,50 @@ import * as zstd from "zstd.ts";
 import * as Errors from "./Errors";
 
 abstract class Writer {
-  abstract write(data: string): void;
+  public abstract write(data: string): void;
 }
 
 export class ChunkWriter extends Writer {
   private basePath: string;
-  private depotName: string;
+  private chunkName: string;
   private maxChunkSize: number | null = null;
   private maxChunkCount: number | null = null;
   private totalSize: number = 0;
 
   constructor(
     basePath: string,
-    params?: {
-      depotName?: string;
+    option?: {
+      chunkName?: string;
       maxChunkSize?: number;
       maxChunkCount?: number;
     }
   ) {
     super();
-    if (!params) {
+    if (!option) {
       this.basePath = basePath;
-      this.depotName = Date.now().toString();
+      this.chunkName = Date.now().toString();
       return;
     }
-    if (params.maxChunkSize && params.maxChunkCount) {
+    if (option.maxChunkSize && option.maxChunkCount) {
       throw new Errors.IllegalParameterError(
         "You can only specify either maxChunkSize or maxChunkCount"
       );
     }
     this.basePath = basePath;
-    this.depotName =
-      params.depotName || Date.now().toString();
-    this.maxChunkSize = params.maxChunkSize || null;
-    this.maxChunkCount = params.maxChunkCount || null;
+    this.chunkName =
+      option.chunkName || Date.now().toString();
+    this.maxChunkSize = option.maxChunkSize || null;
+    this.maxChunkCount = option.maxChunkCount || null;
   }
 
   private getChunkName = (index: number): string => {
     return path.join(
       this.basePath,
-      `${this.depotName}-${index}.bdc`
+      `${this.chunkName}-${index}.cdu`
     );
   };
 
-  write = (data: string): void => {
+  public write = (data: string): void => {
     const buffer = Buffer.from(data, "utf-8");
     const compressed = zstd.compressSync({ input: buffer });
     this.totalSize = compressed.length;
@@ -81,5 +81,18 @@ export class ChunkWriter extends Writer {
     } else {
       fs.writeFileSync(this.getChunkName(0), compressed);
     }
+  };
+}
+
+export class JsonWriter extends Writer {
+  private fileName: string;
+
+  constructor(fileName: string) {
+    super();
+    this.fileName = fileName;
+  }
+
+  public write = (data: string): void => {
+    fs.writeFileSync(this.fileName, data);
   };
 }
