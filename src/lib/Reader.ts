@@ -1,12 +1,13 @@
 import * as path from "path";
 import * as fs from "fs";
 import * as zstd from "zstd.ts";
+import * as cryptojs from "crypto-js";
 
-abstract class Reader {
-  abstract read(): Record<string, unknown>;
+abstract class Reader<T> {
+  public abstract read(key?: string): Record<string, T>;
 }
 
-export class ChunkReader extends Reader {
+export class ChunkReader<T> extends Reader<T> {
   private basePath: string;
   private depotName: string;
 
@@ -19,39 +20,42 @@ export class ChunkReader extends Reader {
   private getChunkName = (index: number): string => {
     return path.join(
       this.basePath,
-      `${this.depotName}-${index}.bdc`
+      `${this.depotName}-${index}.cdu`
     );
   };
 
-  read = (): Record<string, unknown> => {
+  private readWithoutParse = (): string => {
     const chunks = [];
     let i = 0;
     while (fs.existsSync(this.getChunkName(i))) {
       const chunk = fs.readFileSync(this.getChunkName(i));
-      chunks.push(zstd.decompressSync({ input: chunk }));
+      chunks.push(chunk);
       i++;
     }
-    const stringData =
-      Buffer.concat(chunks).toString("utf-8");
-    return JSON.parse(stringData);
+    const concated = Buffer.concat(chunks);
+    const stringData = zstd
+      .decompressSync({ input: concated })
+      .toString("utf-8");
+    return stringData;
+  };
+
+  private readWithKey = (
+    key: string
+  ): Record<string, T> => {
+    const data = cryptojs.AES.decrypt(
+      this.readWithoutParse(),
+      key
+    ).toString(cryptojs.enc.Utf8);
+    return JSON.parse(data);
+  };
+
+  public read = (key?: string): Record<string, T> => {
+    if (key) return this.readWithKey(key);
+    return JSON.parse(this.readWithoutParse());
   };
 }
 
-type BufferEncoding =
-  | "ascii"
-  | "utf8"
-  | "utf-8"
-  | "utf16le"
-  | "utf-16le"
-  | "ucs2"
-  | "ucs-2"
-  | "base64"
-  | "base64url"
-  | "latin1"
-  | "binary"
-  | "hex";
-
-export class JsonReader extends Reader {
+export class JsonReader<T> extends Reader<T> {
   private filePath: string;
   private encoding: BufferEncoding;
 
@@ -61,7 +65,7 @@ export class JsonReader extends Reader {
     this.encoding = encoding || "utf8";
   }
 
-  read = (): Record<string, unknown> => {
+  public read = (): Record<string, T> => {
     const content = fs.readFileSync(
       this.filePath,
       this.encoding
@@ -70,7 +74,7 @@ export class JsonReader extends Reader {
   };
 }
 
-export class ObjectReader extends Reader {
+export class ObjectReader<T> extends Reader<T> {
   private object: object;
 
   constructor(object: object) {
@@ -78,7 +82,7 @@ export class ObjectReader extends Reader {
     this.object = object;
   }
 
-  read = (): Record<string, unknown> => {
+  public read = (): Record<string, T> => {
     return JSON.parse(JSON.stringify(this.object));
   };
 }
