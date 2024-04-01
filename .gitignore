@@ -1,5 +1,6 @@
 .vscode/
 node_modules/
-src/assets/
+test/
 dist/
 temp/
+*.tgz
