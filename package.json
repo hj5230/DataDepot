@@ -29,6 +29,7 @@
   },
   "dependencies": {
     "fs": "^0.0.1-security",
-    "path": "^0.12.7"
+    "path": "^0.12.7",
+    "zstd.ts": "^1.1.3"
   }
 }
