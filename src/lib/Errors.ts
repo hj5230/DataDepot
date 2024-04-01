@@ -50,3 +50,12 @@ export class InstantiateStaticClassError extends ErrorTemplate {
     this.name = "InstantiateStaticClassError";
   }
 }
+
+export class NullDepotError extends ErrorTemplate {
+  constructor() {
+    super(
+      "Depot has been destroyed and can no longer be accessed"
+    );
+    this.name = "NullDepotError";
+  }
+}
