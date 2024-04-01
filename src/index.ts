@@ -1,12 +1,15 @@
 import Depot from "./lib/Depot";
-import Writer from "./lib/Writer";
+import { ChunkWriter } from "./lib/Writer";
+import { ChunkReader } from "./lib/Reader";
 
 import { example } from "./assets/example";
 
 const depot = new Depot();
 // const writer = new Writer("./temp", { maxChunkSize: 1000 });
 // const writer = new Writer("./temp", { maxChunkCount: 3 });
-const writer = new Writer("./temp");
+const writer = new ChunkWriter("./temp", {
+  depotName: "lababa",
+});
 depot.setItem("user", {
   name: "shangqi",
   surname: "zhao",
@@ -16,6 +19,11 @@ depot.setItem("user", {
 depot.setItem("example", example);
 const str = depot.serialize();
 writer.write(str);
+
+const reader = new ChunkReader("./temp", "lababa");
+depot.load(reader.read());
+console.log(depot.getItem("user"));
+console.log(depot.getItem("example"));
 
 // class User {
 //   private username: string;
