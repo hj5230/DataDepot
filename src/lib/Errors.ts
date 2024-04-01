@@ -21,7 +21,9 @@ export class KeyNotFoundError extends ErrorTemplate {
 
 export class ValueMalformedError<T> extends ErrorTemplate {
   constructor(value: T) {
-    super(`Value ${value} is not a legal json instance`);
+    super(
+      `Value ${value} is not or cannot convert to a legal json instance`
+    );
     this.name = "ValueMalformedError";
   }
 }
@@ -37,5 +39,14 @@ export class IllegalStateError extends ErrorTemplate {
   constructor(message: string) {
     super(message);
     this.name = "IllegalStateError";
+  }
+}
+
+export class InstantiateStaticClassError extends ErrorTemplate {
+  constructor(className: string) {
+    super(
+      `${className} is a static class and shall not be instantiated.`
+    );
+    this.name = "InstantiateStaticClassError";
   }
 }
