@@ -41,9 +41,8 @@ class Depot<T> {
     this.depot.delete(key);
   };
 
-  load = (stringData: string): void => {
-    const object = JSON.parse(stringData);
-    this.depot = new Map(Object.entries(object));
+  load = (data: Record<string, T>): void => {
+    this.depot = new Map(Object.entries(data));
   };
 
   serialize = (): string => {
