@@ -41,7 +41,7 @@ export class ChunkWriter extends Writer {
     this.maxChunkCount = option.maxChunkCount || null;
   }
 
-  private getChunkName = (index: number): string => {
+  private getChunkFileName = (index: number): string => {
     return path.join(
       this.basePath,
       `${this.chunkName}-${index}.cdu`
@@ -63,7 +63,7 @@ export class ChunkWriter extends Writer {
           this.totalSize
         );
         const chunk = compressed.subarray(start, end);
-        fs.writeFileSync(this.getChunkName(i), chunk);
+        fs.writeFileSync(this.getChunkFileName(i), chunk);
       }
     } else if (this.maxChunkCount !== null) {
       const chunkSize = Math.ceil(
@@ -76,10 +76,13 @@ export class ChunkWriter extends Writer {
           this.totalSize
         );
         const chunk = compressed.subarray(start, end);
-        fs.writeFileSync(this.getChunkName(i), chunk);
+        fs.writeFileSync(this.getChunkFileName(i), chunk);
       }
     } else {
-      fs.writeFileSync(this.getChunkName(0), compressed);
+      fs.writeFileSync(
+        this.getChunkFileName(0),
+        compressed
+      );
     }
   };
 }
