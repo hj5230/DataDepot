@@ -2,7 +2,7 @@ import * as cryptojs from "crypto-js";
 
 import * as Errors from "./Errors";
 
-class Depot<T> {
+export class Depot<T> {
   private depot: Map<string, T> | null;
 
   constructor() {
@@ -56,7 +56,7 @@ class Depot<T> {
     this.depot = new Map<string, T>(Object.entries(data));
   };
 
-  public serialize = (key?: string): string => {
+  public _serialize = (key?: string): string => {
     if (!this.depot) throw new Errors.NullDepotError();
     const object = Object.fromEntries(this.depot);
     const string = JSON.stringify(object);
@@ -70,7 +70,7 @@ class Depot<T> {
     return string;
   };
 
-  public deserialize = (data: string, key?: string) => {
+  public _deserialize = (data: string, key?: string) => {
     if (key)
       data = cryptojs.AES.decrypt(data, key).toString(
         cryptojs.enc.Utf8
@@ -88,5 +88,3 @@ class Depot<T> {
     this.depot = null;
   };
 }
-
-export default Depot;
