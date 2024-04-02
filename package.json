@@ -1,6 +1,6 @@
 {
   "name": "datadepot",
-  "version": "0.0.1",
+  "version": "0.0.0",
   "description": "A file-based database system designed for storage, retrieval, and management. DataDepot uses MongoDB API for developers, making it an ideal option for small to medium-sized projects that require a lightweight, yet powerful data storage solution, without the overhead of any traditional DB systems. ",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -10,8 +10,11 @@
   "private": true,
   "scripts": {
     "dev": "nodemon",
-    "build": "tsc",
-    "start": "node dist/index.js"
+    "build": "tsc -p tsconfig-index.json && tsc -p tsconfig-lib.json",
+    "start": "node dist/index.js",
+    "test:common": "node test/index.cjs",
+    "test:module": "node test/index.mjs",
+    "test:types": "ts-node test/index.ts"
   },
   "devDependencies": {
     "@eslint/create-config": "0.4.6",
