@@ -3,35 +3,43 @@ import * as fs from "fs";
 import * as zstd from "zstd.ts";
 import * as cryptojs from "crypto-js";
 
+import * as Errors from "./Errors";
+
 abstract class Reader<T> {
   public abstract read(key?: string): Record<string, T>;
 }
 
 export class ChunkReader<T> extends Reader<T> {
   private basePath: string;
-  private depotName: string;
+  private chunkName: string;
 
-  constructor(basePath: string, depotName: string) {
+  constructor(basePath: string, chunkName: string) {
     super();
     this.basePath = basePath;
-    this.depotName = depotName;
+    this.chunkName = chunkName;
   }
 
-  private getChunkName = (index: number): string => {
+  private getChunkFileName = (index: number): string => {
     return path.join(
       this.basePath,
-      `${this.depotName}-${index}.cdu`
+      `${this.chunkName}-${index}.cdu`
     );
   };
 
   private readWithoutParse = (): string => {
     const chunks = [];
     let i = 0;
-    while (fs.existsSync(this.getChunkName(i))) {
-      const chunk = fs.readFileSync(this.getChunkName(i));
+    while (fs.existsSync(this.getChunkFileName(i))) {
+      const chunk = fs.readFileSync(
+        this.getChunkFileName(i)
+      );
       chunks.push(chunk);
       i++;
     }
+    if (i === 0)
+      throw new Errors.ChunkDoesNotExistError(
+        this.chunkName
+      );
     const concated = Buffer.concat(chunks);
     const stringData = zstd
       .decompressSync({ input: concated })
