@@ -59,3 +59,10 @@ export class NullDepotError extends ErrorTemplate {
     this.name = "NullDepotError";
   }
 }
+
+export class ChunkDoesNotExistError extends ErrorTemplate {
+  constructor(chunkName: string) {
+    super(`Chunk ${chunkName} does not exist`);
+    this.name = "ChunkDoesNotExistError";
+  }
+}
