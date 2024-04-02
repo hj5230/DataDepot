@@ -1,4 +1,4 @@
-class ErrorTemplate extends Error {
+abstract class ErrorTemplate extends Error {
   constructor(message: string) {
     super(message);
     this.name = "ErrorTemplate";
