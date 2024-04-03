@@ -10,3 +10,4 @@ nodemon.json
 .gitignore
 .prettierrc
 *.tgz
+*.tar.xz

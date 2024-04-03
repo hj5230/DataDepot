@@ -4,3 +4,4 @@ test/
 dist/
 temp/
 *.tgz
+*.tar.xz
