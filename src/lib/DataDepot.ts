@@ -4,6 +4,8 @@ import {
   ChunkReader,
   JsonReader,
   ObjectReader,
+  FileReader,
+  DirectoryReader,
 } from "./Reader";
 import { ChunkWriter, JsonWriter } from "./Writer";
 
@@ -50,6 +52,26 @@ export class DataDepot {
     depot.setItem(
       key,
       new ObjectReader<T>(object).read() as unknown as T
+    );
+  };
+
+  public static loadFromFile = <T>(
+    depot: Depot<T>,
+    filePath: string,
+    encoding?: BufferEncoding
+  ): void => {
+    depot.load(
+      new FileReader<T>(filePath, encoding).read()
+    );
+  };
+
+  public static loadFromDirectory = <T>(
+    depot: Depot<T>,
+    dirPath: string,
+    encoding?: BufferEncoding
+  ): void => {
+    depot.load(
+      new DirectoryReader<T>(dirPath, encoding).read()
     );
   };
 
