@@ -107,9 +107,7 @@ export class FileReader<T> extends Reader<T> {
 
   public read = (): Record<string, T> => {
     if (!fs.existsSync(this.filePath)) {
-      throw new Error(
-        `File does not exist: ${this.filePath}`
-      );
+      throw new Errors.FileDoesNotExistError(this.filePath);
     }
     const content = fs.readFileSync(
       this.filePath,
@@ -125,7 +123,7 @@ export class DirectoryReader<T> extends Reader<T> {
 
   constructor(dirPath: string, encoding?: BufferEncoding) {
     super();
-    this.dirPath = dirPath;
+    this.dirPath = path.resolve(dirPath);
     this.encoding = encoding || "utf8";
   }
 
@@ -136,9 +134,12 @@ export class DirectoryReader<T> extends Reader<T> {
       withFileTypes: true,
     });
     const result: Record<string, T> = {};
-
     for (const entry of entries) {
       const entryPath = path.join(currentPath, entry.name);
+      const relativePath = path.relative(
+        this.dirPath,
+        entryPath
+      );
       if (entry.isDirectory()) {
         Object.assign(
           result,
@@ -149,7 +150,7 @@ export class DirectoryReader<T> extends Reader<T> {
           entryPath,
           this.encoding
         );
-        result[entryPath] = content as T;
+        result[relativePath] = JSON.parse(content) as T;
       }
     }
     return result;
@@ -157,8 +158,8 @@ export class DirectoryReader<T> extends Reader<T> {
 
   public read = (): Record<string, T> => {
     if (!fs.existsSync(this.dirPath)) {
-      throw new Error(
-        `Directory does not exist: ${this.dirPath}`
+      throw new Errors.DirectoryDoesNotExistError(
+        this.dirPath
       );
     }
     return this.readDirectory(this.dirPath);
