@@ -48,9 +48,12 @@ export class ChunkWriter extends Writer {
     );
   };
 
-  public write = (data: string): void => {
+  public write = async (data: string): Promise<void> => {
     const buffer = Buffer.from(data, "utf-8");
-    const compressed = zstd.compressSync({ input: buffer });
+    // const compressed = zstd.compressSync({ input: buffer });
+    const compressed = await zstd.compress({
+      input: buffer,
+    });
     this.totalSize = compressed.length;
     if (this.maxChunkSize !== null) {
       const chunkCount = Math.ceil(
