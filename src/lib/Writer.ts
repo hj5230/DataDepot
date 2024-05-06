@@ -102,3 +102,39 @@ export class JsonWriter extends Writer {
     fs.writeFileSync(this.fileName, data);
   };
 }
+
+export class DirectoryWriter extends Writer {
+  private dirPath: string;
+  private toPath: string;
+
+  constructor(dirPath: string, toPath: string) {
+    super();
+    this.dirPath = dirPath;
+    this.toPath = toPath;
+  }
+
+  public write(data: string): void {
+    if (!fs.existsSync(this.toPath)) {
+      fs.mkdirSync(this.toPath, { recursive: true });
+    }
+    for (const [filePath, content] of Object.entries(
+      data
+    )) {
+      if (filePath.startsWith(this.dirPath)) {
+        const relativePath = path.relative(
+          this.dirPath,
+          filePath
+        );
+        const fullPath = path.join(
+          this.toPath,
+          relativePath
+        );
+        const fileDir = path.dirname(fullPath);
+        if (!fs.existsSync(fileDir)) {
+          fs.mkdirSync(fileDir, { recursive: true });
+        }
+        fs.writeFileSync(fullPath, JSON.stringify(content));
+      }
+    }
+  }
+}
