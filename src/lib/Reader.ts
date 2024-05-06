@@ -94,3 +94,73 @@ export class ObjectReader<T> extends Reader<T> {
     return JSON.parse(JSON.stringify(this.object));
   };
 }
+
+export class FileReader<T> extends Reader<T> {
+  private filePath: string;
+  private encoding: BufferEncoding;
+
+  constructor(filePath: string, encoding?: BufferEncoding) {
+    super();
+    this.filePath = filePath;
+    this.encoding = encoding || "utf8";
+  }
+
+  public read = (): Record<string, T> => {
+    if (!fs.existsSync(this.filePath)) {
+      throw new Error(
+        `File does not exist: ${this.filePath}`
+      );
+    }
+    const content = fs.readFileSync(
+      this.filePath,
+      this.encoding
+    );
+    return { [this.filePath]: content as T };
+  };
+}
+
+export class DirectoryReader<T> extends Reader<T> {
+  private dirPath: string;
+  private encoding: BufferEncoding;
+
+  constructor(dirPath: string, encoding?: BufferEncoding) {
+    super();
+    this.dirPath = dirPath;
+    this.encoding = encoding || "utf8";
+  }
+
+  private readDirectory = (
+    currentPath: string
+  ): Record<string, T> => {
+    const entries = fs.readdirSync(currentPath, {
+      withFileTypes: true,
+    });
+    const result: Record<string, T> = {};
+
+    for (const entry of entries) {
+      const entryPath = path.join(currentPath, entry.name);
+      if (entry.isDirectory()) {
+        Object.assign(
+          result,
+          this.readDirectory(entryPath)
+        );
+      } else {
+        const content = fs.readFileSync(
+          entryPath,
+          this.encoding
+        );
+        result[entryPath] = content as T;
+      }
+    }
+    return result;
+  };
+
+  public read = (): Record<string, T> => {
+    if (!fs.existsSync(this.dirPath)) {
+      throw new Error(
+        `Directory does not exist: ${this.dirPath}`
+      );
+    }
+    return this.readDirectory(this.dirPath);
+  };
+}
