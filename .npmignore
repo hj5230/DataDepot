@@ -11,3 +11,4 @@ nodemon.json
 .prettierrc
 *.tgz
 *.tar.xz
+*.json
