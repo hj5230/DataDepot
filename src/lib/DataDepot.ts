@@ -7,7 +7,11 @@ import {
   FileReader,
   DirectoryReader,
 } from "./Reader";
-import { ChunkWriter, JsonWriter } from "./Writer";
+import {
+  ChunkWriter,
+  DirectoryWriter,
+  JsonWriter,
+} from "./Writer";
 
 export class DataDepot {
   private constructor() {
@@ -16,14 +20,16 @@ export class DataDepot {
     );
   }
 
-  public static load = <T>(
+  public static load = async <T>(
     depot: Depot<T>,
     basePath: string,
     chunkName: string,
     key?: string
-  ): void => {
+  ): Promise<void> => {
     depot.load(
-      new ChunkReader<T>(basePath, chunkName).read(key)
+      await new ChunkReader<T>(basePath, chunkName).read(
+        key
+      )
     );
   };
 
@@ -107,5 +113,15 @@ export class DataDepot {
     fileName: string
   ): void => {
     new JsonWriter(fileName).write(depot._serialize());
+  };
+
+  public static restoreDirectory = <T>(
+    depot: Depot<T>,
+    dirPath: string,
+    toPath: string
+  ): void => {
+    new DirectoryWriter(dirPath, toPath).write(
+      depot._serialize()
+    );
   };
 }
