@@ -66,3 +66,17 @@ export class ChunkDoesNotExistError extends ErrorTemplate {
     this.name = "ChunkDoesNotExistError";
   }
 }
+
+export class FileDoesNotExistError extends ErrorTemplate {
+  constructor(fileName: string) {
+    super(`File ${fileName} does not exist`);
+    this.name = "FileDoesNotExistError";
+  }
+}
+
+export class DirectoryDoesNotExistError extends ErrorTemplate {
+  constructor(dirName: string) {
+    super(`Directory ${dirName} does not exist`);
+    this.name = "DirectoryDoesNotExistError";
+  }
+}
