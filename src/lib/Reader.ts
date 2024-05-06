@@ -6,7 +6,9 @@ import * as cryptojs from "crypto-js";
 import * as Errors from "./Errors";
 
 abstract class Reader<T> {
-  public abstract read(key?: string): Record<string, T>;
+  public abstract read(
+    key?: string
+  ): Record<string, T> | Promise<Record<string, T>>;
 }
 
 export class ChunkReader<T> extends Reader<T> {
@@ -26,7 +28,7 @@ export class ChunkReader<T> extends Reader<T> {
     );
   };
 
-  private readWithoutParse = (): string => {
+  private readWithoutParse = async (): Promise<string> => {
     const chunks = [];
     let i = 0;
     while (fs.existsSync(this.getChunkFileName(i))) {
@@ -41,25 +43,27 @@ export class ChunkReader<T> extends Reader<T> {
         this.chunkName
       );
     const concated = Buffer.concat(chunks);
-    const stringData = zstd
-      .decompressSync({ input: concated })
-      .toString("utf-8");
-    return stringData;
+    const stringData = await zstd.decompress({
+      input: concated,
+    });
+    return stringData.toString("utf-8");
   };
 
-  private readWithKey = (
+  private readWithKey = async (
     key: string
-  ): Record<string, T> => {
+  ): Promise<Record<string, T>> => {
     const data = cryptojs.AES.decrypt(
-      this.readWithoutParse(),
+      await this.readWithoutParse(),
       key
     ).toString(cryptojs.enc.Utf8);
     return JSON.parse(data);
   };
 
-  public read = (key?: string): Record<string, T> => {
-    if (key) return this.readWithKey(key);
-    return JSON.parse(this.readWithoutParse());
+  public read = async (
+    key?: string
+  ): Promise<Record<string, T>> => {
+    if (key) return await this.readWithKey(key);
+    return JSON.parse(await this.readWithoutParse());
   };
 }
 
@@ -150,7 +154,7 @@ export class DirectoryReader<T> extends Reader<T> {
           entryPath,
           this.encoding
         );
-        result[relativePath] = JSON.parse(content) as T;
+        result[relativePath] = content as T;
       }
     }
     return result;
