@@ -25,9 +25,8 @@
     "dev": "nodemon",
     "build": "rm -rf dist/* && tsc -p tsconfig-index.json && tsc -p tsconfig-lib.json",
     "start": "node dist/index.js",
-    "test:common": "node test/index.test.js",
-    "test:module": "node test/index.test.mjs",
-    "test:types": "ts-node test/index.test.ts"
+    "bundle": "npm run build && npm pack",
+    "test": "npm run bundle && mv *.tgz test/ && cd test && npm i *.tgz && npm run test"
   },
   "devDependencies": {
     "@eslint/create-config": "0.4.6",
