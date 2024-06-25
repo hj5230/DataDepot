@@ -1,8 +1,6 @@
-.vscode/
 node_modules/
-test/
 dist/
-temp/
-*.tgz
-*.tar.xz
-*.json
+test/node_modules/
+test/temp/
+test/package-lock.json
+**/*.tgz

@@ -9,6 +9,4 @@ nodemon.json
 .eslintrc.cjs
 .gitignore
 .prettierrc
-*.tgz
-*.tar.xz
-*.json
+**/*.tgz
