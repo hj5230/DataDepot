@@ -2,6 +2,7 @@ import * as path from "path";
 import * as fs from "fs";
 import * as zstd from "zstd.ts";
 import * as cryptojs from "crypto-js";
+import * as msgpack from "msgpack-lite";
 
 import * as Errors from "./Errors";
 
@@ -28,7 +29,7 @@ export class ChunkReader<T> extends Reader<T> {
     );
   };
 
-  private readWithoutParse = async (): Promise<string> => {
+  private readWithoutParse = async (): Promise<Buffer> => {
     const chunks = [];
     let i = 0;
     while (fs.existsSync(this.getChunkFileName(i))) {
@@ -43,27 +44,27 @@ export class ChunkReader<T> extends Reader<T> {
         this.chunkName
       );
     const concated = Buffer.concat(chunks);
-    const stringData = await zstd.decompress({
+    const decompressed = await zstd.decompress({
       input: concated,
     });
-    return stringData.toString("utf-8");
+    return decompressed;
   };
 
   private readWithKey = async (
     key: string
   ): Promise<Record<string, T>> => {
     const data = cryptojs.AES.decrypt(
-      await this.readWithoutParse(),
+      (await this.readWithoutParse()).toString(),
       key
     ).toString(cryptojs.enc.Utf8);
-    return JSON.parse(data);
+    return msgpack.decode(Buffer.from(data, "base64"));
   };
 
   public read = async (
     key?: string
   ): Promise<Record<string, T>> => {
     if (key) return await this.readWithKey(key);
-    return JSON.parse(await this.readWithoutParse());
+    return msgpack.decode(await this.readWithoutParse());
   };
 }
 
@@ -82,7 +83,7 @@ export class JsonReader<T> extends Reader<T> {
       this.filePath,
       this.encoding
     );
-    return JSON.parse(content);
+    return msgpack.decode(Buffer.from(content));
   };
 }
 
@@ -95,7 +96,7 @@ export class ObjectReader<T> extends Reader<T> {
   }
 
   public read = (): Record<string, T> => {
-    return JSON.parse(JSON.stringify(this.object));
+    return msgpack.decode(msgpack.encode(this.object));
   };
 }
 

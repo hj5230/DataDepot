@@ -1,11 +1,12 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as zstd from "zstd.ts";
+import * as msgpack from "msgpack-lite";
 
 import * as Errors from "./Errors";
 
 abstract class Writer {
-  public abstract write(data: string): void;
+  public abstract write(data: Buffer): void;
 }
 
 export class ChunkWriter extends Writer {
@@ -48,11 +49,9 @@ export class ChunkWriter extends Writer {
     );
   };
 
-  public write = async (data: string): Promise<void> => {
-    const buffer = Buffer.from(data, "utf-8");
-    // const compressed = zstd.compressSync({ input: buffer });
+  public write = async (data: Buffer): Promise<void> => {
     const compressed = await zstd.compress({
-      input: buffer,
+      input: data,
     });
     this.totalSize = compressed.length;
     if (this.maxChunkSize !== null) {
@@ -98,7 +97,7 @@ export class JsonWriter extends Writer {
     this.fileName = fileName;
   }
 
-  public write = (data: string): void => {
+  public write = (data: Buffer): void => {
     fs.writeFileSync(this.fileName, data);
   };
 }
@@ -113,13 +112,12 @@ export class DirectoryWriter extends Writer {
     this.toPath = toPath;
   }
 
-  public write(data: string): void {
+  public write(data: Buffer): void {
     if (!fs.existsSync(this.toPath)) {
       fs.mkdirSync(this.toPath, { recursive: true });
     }
-    for (const [filePath, content] of Object.entries(
-      data
-    )) {
+    const decodedData = msgpack.decode(data) as Record<string, unknown>;
+    for (const [filePath, content] of Object.entries(decodedData)) {
       if (filePath.startsWith(this.dirPath)) {
         const relativePath = path.relative(
           this.dirPath,
@@ -133,7 +131,7 @@ export class DirectoryWriter extends Writer {
         if (!fs.existsSync(fileDir)) {
           fs.mkdirSync(fileDir, { recursive: true });
         }
-        fs.writeFileSync(fullPath, JSON.stringify(content));
+        fs.writeFileSync(fullPath, msgpack.encode(content));
       }
     }
   }

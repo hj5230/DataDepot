@@ -1,4 +1,5 @@
 import * as cryptojs from "crypto-js";
+import * as msgpack from "msgpack-lite";
 
 import * as Errors from "./Errors";
 
@@ -14,7 +15,7 @@ export class Depot<T> {
     if (this.depot.has(key))
       throw new Errors.KeyConflictError(key);
     try {
-      JSON.stringify(value);
+      msgpack.encode(value);
     } catch {
       throw new Errors.ValueMalformedError(value);
     }
@@ -33,7 +34,7 @@ export class Depot<T> {
     if (!this.depot.has(key))
       throw new Errors.KeyNotFoundError(key);
     try {
-      JSON.stringify(value);
+      msgpack.encode(value);
     } catch {
       throw new Errors.ValueMalformedError(value);
     }
@@ -56,26 +57,28 @@ export class Depot<T> {
     this.depot = new Map<string, T>(Object.entries(data));
   };
 
-  public _serialize = (key?: string): string => {
+  public _serialize = (key?: string): Buffer => {
     if (!this.depot) throw new Errors.NullDepotError();
     const object = Object.fromEntries(this.depot);
-    const string = JSON.stringify(object);
+    const buffer = msgpack.encode(object);
     if (key) {
       const encrypted = cryptojs.AES.encrypt(
-        string,
+        buffer.toString("base64"),
         key
       ).toString();
-      return encrypted;
+      return Buffer.from(encrypted);
     }
-    return string;
+    return buffer;
   };
 
-  public _deserialize = (data: string, key?: string) => {
-    if (key)
-      data = cryptojs.AES.decrypt(data, key).toString(
+  public _deserialize = (data: Buffer, key?: string) => {
+    if (key) {
+      const decrypted = cryptojs.AES.decrypt(data.toString(), key).toString(
         cryptojs.enc.Utf8
       );
-    const object = JSON.parse(data);
+      data = Buffer.from(decrypted, "base64");
+    }
+    const object = msgpack.decode(data);
     this.depot = new Map<string, T>(Object.entries(object));
   };
 
