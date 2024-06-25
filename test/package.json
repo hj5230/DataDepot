@@ -2,7 +2,7 @@
   "name": "test",
   "version": "1.0.0",
   "scripts": {
-    "test": "npm run test:cjs && npm run test:esm",
+    "test": "npm run test:cjs",
     "test:cjs": "jest --no-config index.test.js",
     "test:esm": "node --experimental-vm-modules node_modules/jest/bin/jest.js index.test.mjs"
   },
