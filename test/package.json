@@ -2,13 +2,13 @@
   "name": "test",
   "version": "1.0.0",
   "scripts": {
-    "test": "npm run test:cjs",
+    "test": "npm run test:cjs && npm run test:stress",
     "test:cjs": "jest --no-config index.test.js",
-    "test:esm": "node --experimental-vm-modules node_modules/jest/bin/jest.js index.test.mjs"
+    "test:stress": "jest --no-config stress.test.js"
   },
   "author": "hj5230",
   "dependencies": {
-    "datadepot": "file:datadepot-1.0.0.tgz",
+    "datadepot": "file:datadepot-0.0.1.tgz",
     "jest": "^29.7.0"
   },
   "devDependencies": {
