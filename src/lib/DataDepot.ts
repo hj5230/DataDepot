@@ -81,7 +81,7 @@ export class DataDepot {
     );
   };
 
-  public static write = <T>(
+  public static write = async <T>(
     depot: Depot<T>,
     basePath: string,
     option?: {
@@ -90,7 +90,7 @@ export class DataDepot {
       maxChunkSize?: number;
       maxChunkCount?: number;
     }
-  ): void => {
+  ): Promise<void> => {
     const serialized =
       option?.key !== undefined
         ? depot._serialize(option.key)
@@ -104,7 +104,7 @@ export class DataDepot {
         maxChunkCount,
       }).write(serialized);
     } else {
-      new ChunkWriter(basePath).write(serialized);
+      await new ChunkWriter(basePath).write(serialized);
     }
   };
 
