@@ -66,7 +66,7 @@ describe("test:cjs", () => {
 
   test("Write & Read", async () => {
     store.load({ data: { foo: "foo", bar: "bar" } });
-    DataDepot.write(store, "temp/", {
+    await DataDepot.write(store, "temp/", {
       chunkName: "TestChunk",
       key: "TestKey",
       maxChunkCount: 2,
